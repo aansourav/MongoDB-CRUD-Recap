@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const {MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb');
 require('dotenv').config();
 
 
@@ -51,14 +51,41 @@ async function run() {
         app.delete("/users/:id", async (req, res) => {
             const userId = new ObjectId(req.params.id)
             try {
-                const result = await collection.deleteOne({ _id: userId });
+                const result = await collection.deleteOne({_id: userId});
                 if (result.deletedCount === 1) {
-                    res.json({ message: "User deleted successfully" });
+                    res.json({message: "User deleted successfully"});
                 } else {
-                    res.status(404).json({ message: "User not found" });
+                    res.status(404).json({message: "User not found"});
                 }
             } catch (err) {
                 console.error("Error while deleting user:", err);
+                res.status(500).send("Internal Server Error");
+            }
+        });
+
+        app.put('/users/:id', async (req, res) => {
+            const user = req.body
+            const updatedUser = {
+                $set: {
+                    name: user.name,
+                    email: user.email
+                }
+            }
+            const result = await collection.updateOne({_id: new ObjectId(req.params.id)}, updatedUser, {upsert: true});
+            res.send(result)
+        })
+
+        app.get("/users/:id", async (req, res) => {
+            const userId = new ObjectId(req.params.id)
+            try {
+                const user = await collection.findOne({_id: userId});
+                if (user) {
+                    res.send(user);
+                } else {
+                    res.status(404).json({message: "User not found"});
+                }
+            } catch (err) {
+                console.error("Error while updating user:", err);
                 res.status(500).send("Internal Server Error");
             }
         });
